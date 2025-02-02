@@ -1,110 +1,94 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebGL 图像滤镜</title>
+    <title>BeautyPixel Playground</title>
     <style>
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        * {
+            font-size: 20px;
         }
-        
-        .upload-section {
-            margin-bottom: 20px;
+
+        body {
+            margin: 0;
+            padding: 0;
         }
-        
-        .canvas-container {
-            margin: 20px 0;
-        }
-        
-        canvas {
-            max-width: 100%;
-            border: 1px solid #ccc;
-        }
-        
-        .filters-panel {
+
+        .panel {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 300px;
-            background: #f5f5f5;
             padding: 20px;
-            border-radius: 8px;
+            margin: 0;
+            border-radius: 5px;
+            background: #ccc;
+            opacity: .7;
         }
-        
-        .filter-control {
-            margin-bottom: 20px;
+
+        .title {
+            width: 80px;
         }
-        
-        .slider-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+
+        .value {
+            width: 80px;
+            text-align: right;
         }
-        
+
         label {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
-        input[type="range"] {
-            flex: 1;
+
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            width: 100px;
+            height: 60px;
         }
-        
-        .value {
-            min-width: 30px;
-            text-align: right;
-        } 
     </style>
 </head>
+
 <body>
     <div id="app">
-        <div class="container">
-            <div class="upload-section">
-                <input type="file" id="imageInput" accept="image/*">
-            </div>
-            
-            <div class="canvas-container">
-                <canvas id="canvas"></canvas>
-            </div>
-            
-            <div class="filters-panel">
-                <div class="filter-control">
-                    <h3>滤镜参数</h3>
-                    <div class="slider-group">
-                        <label>
-                            色温
-                            <input type="range" id="temp" min="2000" max="10000" value="5000" step="100">
-                            <span class="value">5000</span>
-                        </label>
-                        <label>
-                            色调
-                            <input type="range" id="tint" min="0" max="100" value="0" step="1">
-                            <span class="value">0</span>
-                        </label>
-                        <label>
-                            嫩肤
-                            <input type="range" id="blur" min="0" max="50" value="0" step="1">
-                            <span class="value">0</span>
-                        </label>
-                        <label>
-                            美白
-                            <input type="range" id="whiten" min="0" max="50" value="0" step="1">
-                            <span class="value">0</span>
-                        </label>
-                        <hr/>
-                        <button id="save">保存图片</button>
-                    </div>
-                </div>
-            </div>
+        <canvas id="canvas"></canvas>
+
+        <div class="panel">
+            <label>
+                <span class="title">Temp</span>
+                <input type="range" id="temp" min="2000" max="10000" value="5000" step="500">
+                <span class="value">5000</span>
+            </label>
+            <label>
+                <span class="title">Tint</span>
+                <input type="range" id="tint" min="-100" max="100" value="0" step="10">
+                <span class="value">0</span>
+            </label>
+            <label>
+                <span class="title">Blur</span>
+                <input type="range" id="blur" min="0" max="50" value="0" step="5">
+                <span class="value">0</span>
+            </label>
+            <label>
+                <span class="title">Whiten</span>
+                <input type="range" id="whiten" min="0" max="50" value="0" step="5">
+                <span class="value">0</span>
+            </label>
+            <label>
+                <span class="title">Face</span>
+                <input type="range" id="thin" min="0" max="100" value="0" step="10">
+                <span class="value">0</span>
+            </label>
+            <label>
+                <span class="title">Eyes</span>
+                <input type="range" id="eye" min="0" max="100" value="0" step="10">
+                <span class="value">0</span>
+            </label>
+            <button id="save">Save</button>
         </div>
     </div>
-    <script type="module">
-      import { App } from './src/App.ts';
-      new App();
-    </script>
-  </body>
-</html> 
+    <script type="module" src="/samples/index.ts"></script>
+</body>
+
+</html>

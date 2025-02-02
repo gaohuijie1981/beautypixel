@@ -1,9 +1,31 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ES2020",
-    "moduleResolution": "node",
-    "baseUrl": "."
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "moduleResolution": "bundler",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "noEmit": true,
+    "rootDir": "./",
+    "baseUrl": "./",
+    "allowJs": true,
+    "strict": false,
+    "experimentalDecorators": true
   },
-  "exclude": ["**/node_modules", "**/dist"]
+  "include": [
+    "src",
+    "test",
+    "samples"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

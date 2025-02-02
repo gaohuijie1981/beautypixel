@@ -31,7 +31,6 @@ export class BoxMonoBlurNode extends BaseNode {
       return BoxMonoBlurNode.DefaultVertexShader;
     }
   
-    // 计算优化后的偏移量数量
     const numberOfOptimizedOffsets = Math.min(Math.floor(radius / 2) + (radius % 2), 7);
   
     let shaderStr = `
@@ -50,7 +49,6 @@ export class BoxMonoBlurNode extends BaseNode {
         vec2 singleStepOffset = vec2(texelWidthOffset, texelHeightOffset);
     `;
   
-    // 内部偏移循环
     shaderStr += `
         blurCoordinates[0] = inputTextureCoordinate.xy;\n`;
   
@@ -91,7 +89,6 @@ export class BoxMonoBlurNode extends BaseNode {
   
     const boxWeight = 1.0 / ((radius * 2) + 1);
   
-    // 内部纹理循环
     shaderStr += `
         sum += texture2D(inputImageTexture, blurCoordinates[0]) * ${boxWeight.toFixed(7)};\n`;
   
@@ -102,7 +99,6 @@ export class BoxMonoBlurNode extends BaseNode {
       `;
     }
   
-    // 如果所需的采样数超过我们可以通过varyings传递的数量，我们必须在片段着色器中进行依赖纹理读取
     if (trueNumberOfOptimizedOffsets > numberOfOptimizedOffsets) {
       shaderStr += `
         vec2 singleStepOffset = vec2(texelWidthOffset, texelHeightOffset);\n`;
@@ -160,7 +156,6 @@ export class BoxMonoBlurNode extends BaseNode {
       this.gl.uniform1f(texelHeightOffset, this.horizontalTexelSpacing / this.gl.drawingBufferHeight);
     }
 
-    // 设置顶点数据
     const positionLocation = this.gl.getAttribLocation(this.program, 'position');
     const positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
@@ -169,7 +164,6 @@ export class BoxMonoBlurNode extends BaseNode {
     this.gl.enableVertexAttribArray(positionLocation);
     this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-    // 设置纹理坐标
     const inputTextureCoordinateLocation = this.gl.getAttribLocation(this.program, 'inputTextureCoordinate');
     const inputTextureCoordinateBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, inputTextureCoordinateBuffer);
@@ -178,13 +172,11 @@ export class BoxMonoBlurNode extends BaseNode {
     this.gl.enableVertexAttribArray(inputTextureCoordinateLocation);
     this.gl.vertexAttribPointer(inputTextureCoordinateLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-    // 绑定输入纹理
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.inputTexture);
     const textureLocation = this.gl.getUniformLocation(this.program, 'inputTexture');
     this.gl.uniform1i(textureLocation, 0);
 
-    // 绘制
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);

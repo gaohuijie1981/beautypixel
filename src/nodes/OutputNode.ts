@@ -34,7 +34,6 @@ export class OutputNode extends BaseNode {
   public apply(): WebGLTexture {
     this.useProgram();
 
-    // 设置顶点数据
     const positionLocation = this.gl.getAttribLocation(this.program, 'position');
     const positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
@@ -43,7 +42,6 @@ export class OutputNode extends BaseNode {
     this.gl.enableVertexAttribArray(positionLocation);
     this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-    // 设置纹理坐标
     const inputTextureCoordinateLocation = this.gl.getAttribLocation(this.program, 'inputTextureCoordinate');
     const inputTextureCoordinateBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, inputTextureCoordinateBuffer);
@@ -52,7 +50,6 @@ export class OutputNode extends BaseNode {
     this.gl.enableVertexAttribArray(inputTextureCoordinateLocation);
     this.gl.vertexAttribPointer(inputTextureCoordinateLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-    // 绘制
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.inputTexture);
@@ -66,29 +63,18 @@ export class OutputNode extends BaseNode {
   }
 
   public applySave(file: string): void {
-    // 应用滤镜并渲染
     this.apply();
     
-    // 创建一个临时canvas来保存图片
     const canvas = document.createElement('canvas');
     canvas.width = this.gl.drawingBufferWidth;
     canvas.height = this.gl.drawingBufferHeight;
     
-    // 从WebGL上下文读取像素数据
     const pixels = new Uint8Array(canvas.width * canvas.height * 4);
-    this.gl.readPixels(
-      0, 0,
-      canvas.width, canvas.height,
-      this.gl.RGBA,
-      this.gl.UNSIGNED_BYTE,
-      pixels
-    );
+    this.gl.readPixels(0, 0, canvas.width, canvas.height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels);
     
-    // 获取2D上下文并将像素数据写入
     const ctx = canvas.getContext('2d')!;
     const imageData = ctx.createImageData(canvas.width, canvas.height);
     
-    // WebGL的Y轴方向与canvas 2D相反，需要翻转数据
     for (let i = 0; i < canvas.height; i++) {
       for (let j = 0; j < canvas.width; j++) {
         const sourceIndex = (i * canvas.width + j) * 4;
@@ -102,7 +88,6 @@ export class OutputNode extends BaseNode {
     
     ctx.putImageData(imageData, 0, 0);
     
-    // 创建下载链接
     const link = document.createElement('a');
     link.download = file;
     link.href = canvas.toDataURL('image/png');

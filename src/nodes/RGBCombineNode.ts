@@ -61,7 +61,6 @@ export class RGBCombineNode extends BaseNode {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer);
     this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, frameBufferTexture, 0);
 
-    // 设置顶点数据
     const positionLocation = this.gl.getAttribLocation(this.program, 'position');
     const positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
@@ -70,7 +69,6 @@ export class RGBCombineNode extends BaseNode {
     this.gl.enableVertexAttribArray(positionLocation);
     this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-    // 设置纹理坐标
     const inputTextureCoordinateLocation = this.gl.getAttribLocation(this.program, 'inputTextureCoordinate');
     const inputTextureCoordinateBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, inputTextureCoordinateBuffer);
@@ -79,25 +77,21 @@ export class RGBCombineNode extends BaseNode {
     this.gl.enableVertexAttribArray(inputTextureCoordinateLocation);
     this.gl.vertexAttribPointer(inputTextureCoordinateLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-    // 绑定红色通道纹理
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.redTexture);
     const redLocation = this.gl.getUniformLocation(this.program, 'redTexture');
     this.gl.uniform1i(redLocation, 0);
 
-    // 绑定绿色通道纹理
     this.gl.activeTexture(this.gl.TEXTURE1);
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.greenTexture);
     const greenLocation = this.gl.getUniformLocation(this.program, 'greenTexture');
     this.gl.uniform1i(greenLocation, 1);
 
-    // 绑定蓝色通道纹理
     this.gl.activeTexture(this.gl.TEXTURE2);
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.blueTexture);
     const blueLocation = this.gl.getUniformLocation(this.program, 'blueTexture');
     this.gl.uniform1i(blueLocation, 2);
 
-    // 绘制
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);

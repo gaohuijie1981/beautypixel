@@ -227,7 +227,6 @@ export class BeautyFaceUnitNode extends BaseNode {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer);
     this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, frameBufferTexture, 0);
 
-    // 设置顶点数据
     const positionLocation = this.gl.getAttribLocation(this.program, 'position');
     const positionBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
@@ -236,7 +235,6 @@ export class BeautyFaceUnitNode extends BaseNode {
     this.gl.enableVertexAttribArray(positionLocation);
     this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-    // 设置纹理坐标
     const inputTextureCoordinateLocation = this.gl.getAttribLocation(this.program, 'inputTextureCoordinate');
     const inputTextureCoordinateBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, inputTextureCoordinateBuffer);
@@ -245,7 +243,6 @@ export class BeautyFaceUnitNode extends BaseNode {
     this.gl.enableVertexAttribArray(inputTextureCoordinateLocation);
     this.gl.vertexAttribPointer(inputTextureCoordinateLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-    // 绑定输入纹理及参数
     const sharpenLocation = this.gl.getUniformLocation(this.program, 'sharpen');
     this.gl.uniform1f(sharpenLocation, this.sharpen);
 
@@ -314,7 +311,6 @@ export class BeautyFaceUnitNode extends BaseNode {
     const textureLocation0 = this.gl.getUniformLocation(this.program, 'lookUpCustom');
     this.gl.uniform1i(textureLocation0, 0);
     
-    // 绘制
     this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
