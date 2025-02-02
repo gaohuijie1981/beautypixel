@@ -28,21 +28,23 @@ class App {
   }
   
   constructor() {
+
+    // Canvas set up
     const canvas = document.querySelector<HTMLCanvasElement>('#canvas');
     if (!canvas) throw new Error('Canvas not found');
 
-    // 设置画布大小
-    const displayWidth = 720;
-    const displayHeight = 1280;
-    const canvasWidth = 80;
-    canvas.style.width = canvasWidth + 'vw';
-    canvas.style.height = displayHeight / displayWidth * canvasWidth + 'vw';
-    canvas.width = displayWidth;
-    canvas.height = displayHeight;
+    const imageWidth = 720;
+    const imageHeight = 1280;
+    const canvasHeight = document.documentElement.clientHeight;
+    const canvasWidth = document.documentElement.clientHeight / imageHeight * imageWidth;
+    canvas.style.width = canvasWidth + 'px';
+    canvas.style.height = canvasHeight + 'px';
+    canvas.width = imageWidth;
+    canvas.height = imageHeight;
 
     this.beautyPixel = new BeautyPixel(canvas);
 
-    // 滑块控制
+    // UI set up
     const tempSlider = document.querySelector<HTMLInputElement>('#temp');
     tempSlider?.addEventListener('input', async (e) => {
       const value = (e.target as HTMLInputElement).value;
@@ -90,6 +92,7 @@ class App {
       this.updateValueDisplay(e.target as HTMLInputElement);
       await this.beautyPixel.processImageAsync();
     });
+
     const saveButton = document.querySelector<HTMLButtonElement>('#save');
     saveButton?.addEventListener('click', async (e) => {
       await this.beautyPixel.processImageAsync('output.png');
@@ -97,39 +100,39 @@ class App {
 
     setTimeout(async() => {
 
-      // 载入测试图像
+      // Load test image
       await this.beautyPixel.setImageUrlAsync(SampleFaceData.Image);
       
-      // 载入face-api脸部68点坐标
+      // Load face-api 68 point landmarks
       const points = SampleFaceData.Points;
       if (points.length !== 68) throw Error('Face landmark number mismtach');
 
-      // 规格化face-api脸部68点坐标
+      // Normalize face-api 68 point landmarks
       const normalizedFacePoints = new Float32Array(72 * 2);
       for (let i = 0; i < 68; i++) {
         normalizedFacePoints[i * 2] = points[i].x / 720.0;
         normalizedFacePoints[i * 2 + 1] = points[i].y / 1280.0;
       }
 
-      // 计算右眼坐标
+      // Calculate right eye coordinates
       normalizedFacePoints[68 * 2] = (normalizedFacePoints[37 * 2] + normalizedFacePoints[38 * 2]) / 2;
       normalizedFacePoints[68 * 2 + 1] = (normalizedFacePoints[37 * 2 + 1] + normalizedFacePoints[38 * 2 + 1]) / 2;
       normalizedFacePoints[69 * 2] = (normalizedFacePoints[37 * 2] + normalizedFacePoints[38 * 2] + normalizedFacePoints[40 * 2] + normalizedFacePoints[41 * 2]) / 4;
       normalizedFacePoints[69 * 2 + 1] = (normalizedFacePoints[37 * 2 + 1] + normalizedFacePoints[38 * 2 + 1] + normalizedFacePoints[40 * 2 + 1] + normalizedFacePoints[41 * 2 + 1]) / 4;
 
-      // 计算左眼坐标
+      // Calculate left eye coordinates
       normalizedFacePoints[70 * 2] = (normalizedFacePoints[43 * 2] + normalizedFacePoints[44 * 2]) / 2;
       normalizedFacePoints[70 * 2 + 1] = (normalizedFacePoints[43 * 2 + 1] + normalizedFacePoints[44 * 2 + 1]) / 2;
       normalizedFacePoints[71 * 2] = (normalizedFacePoints[43 * 2] + normalizedFacePoints[44 * 2] + normalizedFacePoints[46 * 2] + normalizedFacePoints[47 * 2]) / 4;
       normalizedFacePoints[71 * 2 + 1] = (normalizedFacePoints[43 * 2 + 1] + normalizedFacePoints[44 * 2 + 1] + normalizedFacePoints[46 * 2 + 1] + normalizedFacePoints[47 * 2 + 1]) / 4;
 
-      // 设定人脸检测有效
+      // Set face detection as valid
       this.beautyPixel.setFace(true);
 
-      // 设定face-api脸部68点坐标
+      // Set face-api 68 point landmarks
       this.beautyPixel.setFacePoints(normalizedFacePoints);
 
-      // 处理测试图像
+      // Process test image
       await this.beautyPixel.processImageAsync();
 
     }, 100);

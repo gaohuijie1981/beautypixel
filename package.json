@@ -24,9 +24,9 @@
     "url": "git+https://github.com/gaohuijie1981/beautypixel.git"
   },
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
     "build": "tsc --p tsconfig.build.json && vite build && npm run build:types",
-    "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json && move dist/src dist/types"
+    "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json && mv dist/src dist/types"
   },
   "devDependencies": {
     "typescript": "^5.5.4",
