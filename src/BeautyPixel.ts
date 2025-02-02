@@ -4,6 +4,8 @@ import { WhiteBalanceNode } from './nodes/WhiteBalanceNode';
 import { BoxBlurNode } from './nodes/BoxBlurNode';
 import { BoxHighPassNode } from './nodes/BoxHighPassNode';
 import { BeautyFaceUnitNode } from './nodes/BeautyFaceUnitNode';
+import { FaceReshapeNode } from './nodes/FaceReshapeNode';
+import { Resources } from './Resources';
 
 export class BeautyPixel {
   private canvas: HTMLCanvasElement;
@@ -14,14 +16,15 @@ export class BeautyPixel {
   private blur: BoxBlurNode;
   private highpass: BoxHighPassNode;
   private beauty: BeautyFaceUnitNode;
+  private face: FaceReshapeNode;
   private output: OutputNode;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    if (!this.canvas) throw new Error('找不到画布元素');
+    if (!this.canvas) throw new Error('Canvas not found');
 
     this.gl = canvas.getContext('webgl');
-    if (!this.gl) throw new Error('WebGL不可用');
+    if (!this.gl) throw new Error('WebGL not available');
 
     this.input = new InputNode(this.gl);
     this.white = new WhiteBalanceNode(this.gl);
@@ -32,6 +35,7 @@ export class BeautyPixel {
     this.highpass = new BoxHighPassNode(this.gl);
     this.setRadius(4);
     this.beauty = new BeautyFaceUnitNode(this.gl);
+    this.face = new FaceReshapeNode(this.gl);
     this.output = new OutputNode(this.gl);
   }
 
@@ -77,15 +81,31 @@ export class BeautyPixel {
     this.highpass.setRaidus(value);
   }
 
+  public setThin(value: number): void {
+    this.face.setThin(value);
+  }
+
+  public setEye(value: number): void {
+    this.face.setEye(value);
+  }
+
+  public setFace(value: boolean): void {
+    this.face.setFace(value);
+  }
+
+  public setFacePoints(value: Float32List): void {
+    this.face.setPoints(value);
+  }
+  
   private isProcessing: boolean = false;
 
   public async setImageUrlAsync(imageUrl: string): Promise<void> {
     this.image = await this.loadImageAsync(imageUrl);
     this.input.setInputImage(this.image);
-    this.beauty.setLookUpGray(await this.loadImageAsync('resources/lookup_gray.png'));
-    this.beauty.setLookUpOrigin(await this.loadImageAsync('resources/lookup_origin.png'));
-    this.beauty.setLookUpSkin(await this.loadImageAsync('resources/lookup_skin.png'));
-    this.beauty.setLookUpCustom(await this.loadImageAsync('resources/lookup_light.png'));
+    this.beauty.setLookUpGray(await this.loadImageAsync(Resources.Image_Lookup_Gray));
+    this.beauty.setLookUpOrigin(await this.loadImageAsync(Resources.Image_Lookup_Origin));
+    this.beauty.setLookUpSkin(await this.loadImageAsync(Resources.Image_Lookup_Skin));
+    this.beauty.setLookUpCustom(await this.loadImageAsync(Resources.Image_Lookup_Light));
   }
 
   public async processImageAsync(file: string = null): Promise<boolean> {
@@ -110,7 +130,10 @@ export class BeautyPixel {
     this.beauty.setInputTexture1(balacneTexture);
     this.beauty.setInputTexture2(blurTexture);
     this.beauty.setInputTexture3(highpassTexture);
-    const outputTexture = this.beauty.apply();
+    const beautyTexture = this.beauty.apply();
+
+    this.face.setInputTexture(beautyTexture);
+    const outputTexture = this.face.apply();
     
     this.output.setInputTexture(outputTexture);
     if (file) {

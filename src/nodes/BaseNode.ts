@@ -42,7 +42,7 @@ export abstract class BaseNode {
     this.gl.compileShader(shader);
 
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      console.error('着色器编译错误:', this.gl.getShaderInfoLog(shader));
+      console.error('Shader:', this.gl.getShaderInfoLog(shader));
       this.gl.deleteShader(shader);
       return null;
     }
