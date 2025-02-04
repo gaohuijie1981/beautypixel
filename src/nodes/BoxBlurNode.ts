@@ -1,7 +1,7 @@
-import { GroupNode } from './GroupNode';
+import { BaseNode } from './BaseNode';
 import { BoxMonoBlurNode } from './BoxMonoBlurNode';
 
-export class BoxBlurNode extends GroupNode {
+export class BoxBlurNode extends BaseNode {
   private horizontalBlurFilter: BoxMonoBlurNode;
   private verticalBlurFilter: BoxMonoBlurNode;
 
@@ -27,20 +27,14 @@ export class BoxBlurNode extends GroupNode {
     this.verticalBlurFilter.setRadius(value);
   }
 
-  protected generateVertexShaderString(radius: number): string {
-    if (radius < 1) {
-      return BoxMonoBlurNode.DefaultVertexShader;
-    }
-  }
-
-  public apply(): WebGLTexture {
+  public apply(screen: boolean = false): WebGLTexture {
     let outputTexture = this.inputTexture;
 
     this.horizontalBlurFilter.setInputTexture(outputTexture);
-    outputTexture = this.horizontalBlurFilter.apply();
+    outputTexture = this.horizontalBlurFilter.apply(screen);
 
     this.verticalBlurFilter.setInputTexture(outputTexture);
-    outputTexture = this.verticalBlurFilter.apply();
+    outputTexture = this.verticalBlurFilter.apply(screen);
 
     return outputTexture;
   }

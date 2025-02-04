@@ -1,10 +1,6 @@
-import { BaseNode } from './BaseNode';
+import { ShaderNode } from './ShaderNode';
 
-export class BeautyFaceUnitNode extends BaseNode {
-
-  constructor (gl: WebGLRenderingContext) {
-    super(gl);
-  }
+export class FaceBeautyNode extends ShaderNode {
 
   private lookUpGray: HTMLImageElement;
   public setLookUpGray(image: HTMLImageElement): void {
@@ -26,18 +22,18 @@ export class BeautyFaceUnitNode extends BaseNode {
     this.lookUpCustom = image;
   }
 
-  private inputTexture1: WebGLTexture;
-  public setInputTexture1(texture: WebGLTexture): void {
+  private inputTexture1: WebGLTexture | HTMLImageElement;
+  public setInputTexture1(texture: WebGLTexture | HTMLImageElement): void {
     this.inputTexture1 = texture;
   }
   
-  private inputTexture2: WebGLTexture;
-  public setInputTexture2(texture: WebGLTexture): void {
+  private inputTexture2: WebGLTexture | HTMLImageElement;
+  public setInputTexture2(texture: WebGLTexture | HTMLImageElement): void {
     this.inputTexture2 = texture;
   }
 
-  private inputTexture3: WebGLTexture;
-  public setInputTexture3(texture: WebGLTexture): void {
+  private inputTexture3: WebGLTexture | HTMLImageElement;
+  public setInputTexture3(texture: WebGLTexture | HTMLImageElement): void {
     this.inputTexture3 = texture;
   }
 
@@ -211,110 +207,26 @@ export class BeautyFaceUnitNode extends BaseNode {
     return shaderStr;
   }
 
-  public apply(): WebGLTexture {
+  public apply(screen: boolean = false): WebGLTexture {
+
     this.useProgram();
+    this.useStandardFrameBuffer(screen);
 
-    const frameBuffer = this.gl.createFramebuffer();
-    const frameBufferTexture = this.gl.createTexture();
+    this.gl.uniform1f(this.gl.getUniformLocation(this.program, 'sharpen'), this.sharpen);
+    this.gl.uniform1f(this.gl.getUniformLocation(this.program, 'blurAlpha'), this.blurAlpha);
+    this.gl.uniform1f(this.gl.getUniformLocation(this.program, 'whiten'), this.whiten);
 
-    this.gl.bindTexture(this.gl.TEXTURE_2D, frameBufferTexture);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, null);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+    this.loadTexture(this.inputTexture1, 'inputImageTexture', 2)
+    this.loadTexture(this.inputTexture2, 'inputImageTexture2', 3)
+    this.loadTexture(this.inputTexture3, 'inputImageTexture3', 4)
 
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer);
-    this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, frameBufferTexture, 0);
-
-    const positionLocation = this.gl.getAttribLocation(this.program, 'position');
-    const positionBuffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-    const positions = new Float32Array([-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0]);
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, positions, this.gl.STATIC_DRAW);
-    this.gl.enableVertexAttribArray(positionLocation);
-    this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
-
-    const inputTextureCoordinateLocation = this.gl.getAttribLocation(this.program, 'inputTextureCoordinate');
-    const inputTextureCoordinateBuffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, inputTextureCoordinateBuffer);
-    const inputTextureCoordinates = new Float32Array([0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]);
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, inputTextureCoordinates, this.gl.STATIC_DRAW);
-    this.gl.enableVertexAttribArray(inputTextureCoordinateLocation);
-    this.gl.vertexAttribPointer(inputTextureCoordinateLocation, 2, this.gl.FLOAT, false, 0, 0);
-
-    const sharpenLocation = this.gl.getUniformLocation(this.program, 'sharpen');
-    this.gl.uniform1f(sharpenLocation, this.sharpen);
-
-    const blurAlphaLocation = this.gl.getUniformLocation(this.program, 'blurAlpha');
-    this.gl.uniform1f(blurAlphaLocation, this.blurAlpha);
-
-    const whitenLocation = this.gl.getUniformLocation(this.program, 'whiten');
-    this.gl.uniform1f(whitenLocation, this.whiten);
-
-    this.gl.activeTexture(this.gl.TEXTURE2);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.inputTexture1);
-    const textureLocation2 = this.gl.getUniformLocation(this.program, 'inputImageTexture');
-    this.gl.uniform1i(textureLocation2, 2);
-
-    this.gl.activeTexture(this.gl.TEXTURE3);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.inputTexture2);
-    const textureLocation3 = this.gl.getUniformLocation(this.program, 'inputImageTexture2');
-    this.gl.uniform1i(textureLocation3, 3);
-
-    this.gl.activeTexture(this.gl.TEXTURE4);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.inputTexture3);
-    const textureLocation4 = this.gl.getUniformLocation(this.program, 'inputImageTexture3');
-    this.gl.uniform1i(textureLocation4, 4);
-
-    const lookUpGrayTexture = this.gl.createTexture();
-    this.gl.activeTexture(this.gl.TEXTURE5);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, lookUpGrayTexture);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.lookUpGray);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-    const textureLocation5 = this.gl.getUniformLocation(this.program, 'lookUpGray');
-    this.gl.uniform1i(textureLocation5, 5);
-
-    const lookUpOriginTexture = this.gl.createTexture();
-    this.gl.activeTexture(this.gl.TEXTURE6);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, lookUpOriginTexture);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.lookUpOrigin);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-    const textureLocation6 = this.gl.getUniformLocation(this.program, 'lookUpOrigin');
-    this.gl.uniform1i(textureLocation6, 6);
-
-    const lookUpSkinTexture = this.gl.createTexture();
-    this.gl.activeTexture(this.gl.TEXTURE7);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, lookUpSkinTexture);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.lookUpSkin);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-    const textureLocation7 = this.gl.getUniformLocation(this.program, 'lookUpSkin');
-    this.gl.uniform1i(textureLocation7, 7);
-
-    const lookUpCustomTexture = this.gl.createTexture();
-    this.gl.activeTexture(this.gl.TEXTURE0);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, lookUpCustomTexture);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.lookUpCustom);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-    const textureLocation0 = this.gl.getUniformLocation(this.program, 'lookUpCustom');
-    this.gl.uniform1i(textureLocation0, 0);
+    this.loadTexture(this.lookUpGray, 'lookUpGray', 5);
+    this.loadTexture(this.lookUpOrigin, 'lookUpOrigin', 6);
+    this.loadTexture(this.lookUpSkin, 'lookUpSkin', 7);
+    this.loadTexture(this.lookUpCustom, 'lookUpCustom', 0);
     
-    this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+    this.draw();
 
-    return frameBufferTexture;
+    return this.frameBufferTexture;
   }
 }

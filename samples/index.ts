@@ -80,7 +80,7 @@ class App {
     const thinSlider = document.querySelector<HTMLInputElement>('#thin');
     thinSlider?.addEventListener('input', async (e) => {
       const value = (e.target as HTMLInputElement).value;
-      this.beautyPixel.setThin(parseInt(value) / 100);
+      this.beautyPixel.setFace(parseInt(value) / 100);
       this.updateValueDisplay(e.target as HTMLInputElement);
       await this.beautyPixel.processImageAsync();
     });
@@ -127,7 +127,7 @@ class App {
       normalizedFacePoints[71 * 2 + 1] = (normalizedFacePoints[43 * 2 + 1] + normalizedFacePoints[44 * 2 + 1] + normalizedFacePoints[46 * 2 + 1] + normalizedFacePoints[47 * 2 + 1]) / 4;
 
       // Set face detection as valid
-      this.beautyPixel.setFace(true);
+      this.beautyPixel.setValid(true);
 
       // Set face-api 68 point landmarks
       this.beautyPixel.setFacePoints(normalizedFacePoints);

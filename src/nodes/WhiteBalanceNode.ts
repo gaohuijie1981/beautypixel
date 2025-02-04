@@ -1,8 +1,9 @@
-import { BaseNode } from './BaseNode';
+import { ShaderNode } from './ShaderNode';
 
-export class WhiteBalanceNode extends BaseNode {
-  private inputTexture: WebGLTexture;
-  public setInputTexture(texture: WebGLTexture): void {
+export class WhiteBalanceNode extends ShaderNode {
+
+  private inputTexture: WebGLTexture | HTMLImageElement;
+  public setInputTexture(texture: WebGLTexture | HTMLImageElement): void {
     this.inputTexture = texture;
   }
 
@@ -67,52 +68,17 @@ export class WhiteBalanceNode extends BaseNode {
       }`;
   }
 
-  public apply(): WebGLTexture {
+  public apply(screen: boolean = false): WebGLTexture {
+
     this.useProgram();
+    this.useStandardFrameBuffer(screen);
 
-    const tempLocation = this.gl.getUniformLocation(this.program, 'temperature');
-    this.gl.uniform1f(tempLocation, this.temperature);
-    const tintLocation = this.gl.getUniformLocation(this.program, 'tint');
-    this.gl.uniform1f(tintLocation, this.tint);
+    this.gl.uniform1f(this.gl.getUniformLocation(this.program, 'temperature'), this.temperature);
+    this.gl.uniform1f(this.gl.getUniformLocation(this.program, 'tint'), this.tint);
 
-    const frameBuffer = this.gl.createFramebuffer();
-    const frameBufferTexture = this.gl.createTexture();
+    this.loadTexture(this.inputTexture, 'inputImageTexture');
+    this.draw();
 
-    this.gl.bindTexture(this.gl.TEXTURE_2D, frameBufferTexture);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, null);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer);
-    this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, frameBufferTexture, 0);
-
-    const positionLocation = this.gl.getAttribLocation(this.program, 'position');
-    const positionBuffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
-    const positions = new Float32Array([-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0]);
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, positions, this.gl.STATIC_DRAW);
-    this.gl.enableVertexAttribArray(positionLocation);
-    this.gl.vertexAttribPointer(positionLocation, 2, this.gl.FLOAT, false, 0, 0);
-
-    const inputTextureCoordinateLocation = this.gl.getAttribLocation(this.program, 'inputTextureCoordinate');
-    const inputTextureCoordinateBuffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, inputTextureCoordinateBuffer);
-    const inputTextureCoordinates = new Float32Array([0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]);
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, inputTextureCoordinates, this.gl.STATIC_DRAW);
-    this.gl.enableVertexAttribArray(inputTextureCoordinateLocation);
-    this.gl.vertexAttribPointer(inputTextureCoordinateLocation, 2, this.gl.FLOAT, false, 0, 0);
-
-    this.gl.activeTexture(this.gl.TEXTURE0);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.inputTexture);
-    const textureLocation = this.gl.getUniformLocation(this.program, 'inputImageTexture');
-    this.gl.uniform1i(textureLocation, 0);
-
-    this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
-
-    return frameBufferTexture;
+    return this.frameBufferTexture;
   }
 }
