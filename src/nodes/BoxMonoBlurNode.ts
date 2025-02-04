@@ -21,9 +21,10 @@ export class BoxMonoBlurNode extends ShaderNode {
   }
 
   private radius: number;
+  private updateShader: boolean  = false;
   public setRadius(value: number): void {
     this.radius = Math.round(Math.round(value / 2.0) * 2.0);
-    this.destroyProgram();
+    this.updateShader = true;
   }
 
   protected generateVertexShaderString(radius: number): string {
@@ -36,17 +37,22 @@ export class BoxMonoBlurNode extends ShaderNode {
     let shaderStr = `
       attribute vec4 position;
       attribute vec4 inputTextureCoordinate;
+      varying vec2 textureCoordinate;
       
       uniform float texelWidthOffset;
       uniform float texelHeightOffset;
       
       varying vec2 blurCoordinates[${1 + (numberOfOptimizedOffsets * 2)}];
-      
+      varying float saveWidthOffset;
+      varying float saveHeightOffset;
+
       void main()
       {
         gl_Position = position;
         
         vec2 singleStepOffset = vec2(texelWidthOffset, texelHeightOffset);
+        saveWidthOffset = texelWidthOffset;
+        saveHeightOffset = texelHeightOffset;         
     `;
   
     shaderStr += `
@@ -61,7 +67,9 @@ export class BoxMonoBlurNode extends ShaderNode {
       `;
     }
   
-    shaderStr += '}\n';
+    shaderStr += `
+        textureCoordinate = inputTextureCoordinate.xy;
+    }`;
   
     return shaderStr;
   }
@@ -73,18 +81,20 @@ export class BoxMonoBlurNode extends ShaderNode {
   
     const numberOfOptimizedOffsets = Math.min(Math.floor(radius / 2) + (radius % 2), 7);
     const trueNumberOfOptimizedOffsets = Math.floor(radius / 2) + (radius % 2);
-  
+
     let shaderStr = `
       precision mediump float;
+      varying vec2 textureCoordinate;
       uniform sampler2D inputImageTexture;
-      uniform float texelWidthOffset;
-      uniform float texelHeightOffset;
+      varying float saveWidthOffset;
+      varying float saveHeightOffset;
       
       varying vec2 blurCoordinates[${1 + (numberOfOptimizedOffsets * 2)}];
       
       void main()
       {
         vec4 sum = vec4(0.0);
+        vec4 col = texture2D(inputImageTexture, textureCoordinate);
     `;
   
     const boxWeight = 1.0 / ((radius * 2) + 1);
@@ -101,7 +111,7 @@ export class BoxMonoBlurNode extends ShaderNode {
   
     if (trueNumberOfOptimizedOffsets > numberOfOptimizedOffsets) {
       shaderStr += `
-        vec2 singleStepOffset = vec2(texelWidthOffset, texelHeightOffset);\n`;
+        vec2 singleStepOffset = vec2(saveWidthOffset, saveHeightOffset);\n`;
       
       for (let currentOverlowTextureRead = numberOfOptimizedOffsets; currentOverlowTextureRead < trueNumberOfOptimizedOffsets; currentOverlowTextureRead++) {
         const optimizedOffset = (currentOverlowTextureRead * 2) + 1.5;
@@ -141,7 +151,7 @@ export class BoxMonoBlurNode extends ShaderNode {
       this.gl.uniform1f(this.gl.getUniformLocation(this.program, 'texelHeightOffset'), this.horizontalTexelSpacing / this.gl.drawingBufferHeight);
     }
 
-    this.loadTexture(this.inputTexture, 'inputTexture');
+    this.loadTexture(this.inputTexture, 'inputImageTexture');
 
     this.draw();
 
