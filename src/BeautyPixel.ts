@@ -93,12 +93,13 @@ export class BeautyPixel {
   
   private isProcessing: boolean = false;
 
-  public async setImageUrlAsync(imageUrl: string): Promise<void> {
+  public async setImageUrlAsync(imageUrl: string): Promise<HTMLImageElement> {
     this.image = await this.loadImageAsync(imageUrl);
     this.beauty.setLookUpGray(await this.loadImageAsync(Resources.Image_Lookup_Gray));
     this.beauty.setLookUpOrigin(await this.loadImageAsync(Resources.Image_Lookup_Origin));
     this.beauty.setLookUpSkin(await this.loadImageAsync(Resources.Image_Lookup_Skin));
     this.beauty.setLookUpCustom(await this.loadImageAsync(Resources.Image_Lookup_Light));
+    return this.image;
   }
 
   public async processImageAsync(file: string = null): Promise<boolean> {
