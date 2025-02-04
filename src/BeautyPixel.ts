@@ -1,9 +1,7 @@
-import { InputNode } from './nodes/InputNode';
-import { OutputNode } from './nodes/OutputNode';
 import { WhiteBalanceNode } from './nodes/WhiteBalanceNode';
 import { BoxBlurNode } from './nodes/BoxBlurNode';
 import { BoxHighPassNode } from './nodes/BoxHighPassNode';
-import { BeautyFaceUnitNode } from './nodes/BeautyFaceUnitNode';
+import { FaceBeautyNode } from './nodes/FaceBeautyNode';
 import { FaceReshapeNode } from './nodes/FaceReshapeNode';
 import { Resources } from './Resources';
 
@@ -11,13 +9,11 @@ export class BeautyPixel {
   private canvas: HTMLCanvasElement;
   private gl: WebGLRenderingContext;
   private image: HTMLImageElement;
-  private input: InputNode;
   private white: WhiteBalanceNode;
   private blur: BoxBlurNode;
   private highpass: BoxHighPassNode;
-  private beauty: BeautyFaceUnitNode;
-  private face: FaceReshapeNode;
-  private output: OutputNode;
+  private beauty: FaceBeautyNode;
+  private reshape: FaceReshapeNode;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -26,7 +22,6 @@ export class BeautyPixel {
     this.gl = canvas.getContext('webgl');
     if (!this.gl) throw new Error('WebGL not available');
 
-    this.input = new InputNode(this.gl);
     this.white = new WhiteBalanceNode(this.gl);
     this.white.setTemperature(5000);
     this.white.setTint(0);
@@ -34,9 +29,8 @@ export class BeautyPixel {
     this.blur.setTexelSpacingMultiplier(4);
     this.highpass = new BoxHighPassNode(this.gl);
     this.setRadius(4);
-    this.beauty = new BeautyFaceUnitNode(this.gl);
-    this.face = new FaceReshapeNode(this.gl);
-    this.output = new OutputNode(this.gl);
+    this.beauty = new FaceBeautyNode(this.gl);
+    this.reshape = new FaceReshapeNode(this.gl);
   }
 
   private async loadImageAsync(imageUrl: string): Promise<HTMLImageElement> {
@@ -81,31 +75,31 @@ export class BeautyPixel {
     this.highpass.setRaidus(value);
   }
 
-  public setThin(value: number): void {
-    this.face.setThin(value);
+  public setFace(value: number): void {
+    this.reshape.setFace(value);
   }
 
   public setEye(value: number): void {
-    this.face.setEye(value);
+    this.reshape.setEye(value);
   }
 
-  public setFace(value: boolean): void {
-    this.face.setFace(value);
+  public setValid(value: boolean): void {
+    this.reshape.setValid(value);
   }
 
   public setFacePoints(value: Float32List): void {
-    this.face.setPoints(value);
+    this.reshape.setPoints(value);
   }
   
   private isProcessing: boolean = false;
 
-  public async setImageUrlAsync(imageUrl: string): Promise<void> {
+  public async setImageUrlAsync(imageUrl: string): Promise<HTMLImageElement> {
     this.image = await this.loadImageAsync(imageUrl);
-    this.input.setInputImage(this.image);
     this.beauty.setLookUpGray(await this.loadImageAsync(Resources.Image_Lookup_Gray));
     this.beauty.setLookUpOrigin(await this.loadImageAsync(Resources.Image_Lookup_Origin));
     this.beauty.setLookUpSkin(await this.loadImageAsync(Resources.Image_Lookup_Skin));
     this.beauty.setLookUpCustom(await this.loadImageAsync(Resources.Image_Lookup_Light));
+    return this.image;
   }
 
   public async processImageAsync(file: string = null): Promise<boolean> {
@@ -113,13 +107,9 @@ export class BeautyPixel {
     if(this.isProcessing) return false;
     
     this.isProcessing = true;
-    
-    const inputTexture = this.input.apply();
-    
-    this.white.setInputTexture(inputTexture);
-    const balacneTexture = this.white.apply();
 
-    this.beauty.setInputTexture1(balacneTexture);
+    this.white.setInputTexture(this.image);
+    const balacneTexture = this.white.apply();
 
     this.blur.setInputTexture(balacneTexture);
     const blurTexture = this.blur.apply();
@@ -132,14 +122,12 @@ export class BeautyPixel {
     this.beauty.setInputTexture3(highpassTexture);
     const beautyTexture = this.beauty.apply();
 
-    this.face.setInputTexture(beautyTexture);
-    const outputTexture = this.face.apply();
-    
-    this.output.setInputTexture(outputTexture);
+    this.reshape.setInputTexture(beautyTexture);
+
     if (file) {
-      this.output.applySave(file);
+      this.reshape.save(file);
     } else {
-      this.output.apply();
+      this.reshape.apply(true);
     }
 
     this.isProcessing = false;

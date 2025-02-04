@@ -1,9 +1,9 @@
-import { GroupNode } from './GroupNode';
+import { BaseNode } from './BaseNode';
 import { BoxBlurNode } from './BoxBlurNode';
 import { BoxDifferenceNode } from './BoxDifferenceNode';
 
 
-export class BoxHighPassNode extends GroupNode {
+export class BoxHighPassNode extends BaseNode {
 
   private boxBlurNode: BoxBlurNode;
   private boxDifferenceNode: BoxDifferenceNode;
@@ -27,14 +27,14 @@ export class BoxHighPassNode extends GroupNode {
     this.boxDifferenceNode.setDelta(value);
   }
 
-  public apply(): WebGLTexture {
+  public apply(screen: boolean = false): WebGLTexture {
 
     this.boxBlurNode.setInputTexture(this.inputTexture);
-    let outputTexture = this.boxBlurNode.apply();
+    let outputTexture = this.boxBlurNode.apply(screen);
 
     this.boxDifferenceNode.setInputTexture1(this.inputTexture);
     this.boxDifferenceNode.setInputTexture2(outputTexture);
-    outputTexture = this.boxDifferenceNode.apply();
+    outputTexture = this.boxDifferenceNode.apply(screen);
 
     return outputTexture;
   }
