@@ -91,7 +91,8 @@ export class BeautyPixel {
     this.reshape.setPoints(value);
   }
   
-  private isProcessing: boolean = false;
+  private needUpdate: boolean = false;
+  private isRendering: boolean = false;
 
   public async setImageUrlAsync(imageUrl: string): Promise<HTMLImageElement> {
     this.image = await this.loadImageAsync(imageUrl);
@@ -102,36 +103,40 @@ export class BeautyPixel {
     return this.image;
   }
 
-  public async processImageAsync(file: string = null): Promise<boolean> {
+  public refresh(): void {
+    this.needUpdate = true;
+  }
+  
+  public render(): void {
 
-    if(this.isProcessing) return false;
-    
-    this.isProcessing = true;
+    if (this.isRendering) return;
 
-    this.white.setInputTexture(this.image);
-    const balacneTexture = this.white.apply();
+    if (this.needUpdate) {
+      
+      this.isRendering = true;
 
-    this.blur.setInputTexture(balacneTexture);
-    const blurTexture = this.blur.apply();
-
-    this.highpass.setInputTexture(balacneTexture);
-    const highpassTexture = this.highpass.apply();
-
-    this.beauty.setInputTexture1(balacneTexture);
-    this.beauty.setInputTexture2(blurTexture);
-    this.beauty.setInputTexture3(highpassTexture);
-    const beautyTexture = this.beauty.apply();
-
-    this.reshape.setInputTexture(beautyTexture);
-
-    if (file) {
-      this.reshape.save(file);
-    } else {
+      this.white.setInputTexture(this.image);
+      const balacneTexture = this.white.apply();
+  
+      this.blur.setInputTexture(balacneTexture);
+      const blurTexture = this.blur.apply();
+  
+      this.highpass.setInputTexture(balacneTexture);
+      const highpassTexture = this.highpass.apply();
+  
+      this.beauty.setInputTexture1(balacneTexture);
+      this.beauty.setInputTexture2(blurTexture);
+      this.beauty.setInputTexture3(highpassTexture);
+      const beautyTexture = this.beauty.apply();
+  
+      this.reshape.setInputTexture(beautyTexture);
       this.reshape.apply(true);
+
+      this.isRendering = false;
     }
+  }
 
-    this.isProcessing = false;
-
-    return true;
+  public save(file: string): void {
+    this.reshape.save(file)
   }
 }

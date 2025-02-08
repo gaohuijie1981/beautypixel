@@ -21,7 +21,7 @@ class App {
       reader.onload = async (e) => {
         this.imageUrl = e.target?.result as string;
         await this.beautyPixel.setImageUrlAsync(this.imageUrl);
-        await this.beautyPixel.processImageAsync();
+        this.beautyPixel.refresh();
       };
       reader.readAsDataURL(file);
     }
@@ -50,7 +50,7 @@ class App {
       const value = (e.target as HTMLInputElement).value;
       this.beautyPixel.setTemperature(parseInt(value));
       this.updateValueDisplay(e.target as HTMLInputElement);
-      await this.beautyPixel.processImageAsync();
+      this.beautyPixel.refresh();
     });
 
     const tintSlider = document.querySelector<HTMLInputElement>('#tint');
@@ -58,7 +58,7 @@ class App {
       const value = (e.target as HTMLInputElement).value;
       this.beautyPixel.setTint(parseInt(value));
       this.updateValueDisplay(e.target as HTMLInputElement);
-      await this.beautyPixel.processImageAsync();
+      this.beautyPixel.refresh();
     });
 
     const blurSlider = document.querySelector<HTMLInputElement>('#blur');
@@ -66,7 +66,7 @@ class App {
       const value = (e.target as HTMLInputElement).value;
       this.beautyPixel.setBlur(parseInt(value) / 100);
       this.updateValueDisplay(e.target as HTMLInputElement);
-      await this.beautyPixel.processImageAsync();
+      this.beautyPixel.refresh();
     });
 
     const whitenSlider = document.querySelector<HTMLInputElement>('#whiten');
@@ -74,7 +74,7 @@ class App {
       const value = (e.target as HTMLInputElement).value;
       this.beautyPixel.setWhiten(parseInt(value) / 100);
       this.updateValueDisplay(e.target as HTMLInputElement);
-      await this.beautyPixel.processImageAsync();
+      this.beautyPixel.refresh();
     });
 
     const thinSlider = document.querySelector<HTMLInputElement>('#thin');
@@ -82,7 +82,7 @@ class App {
       const value = (e.target as HTMLInputElement).value;
       this.beautyPixel.setFace(parseInt(value) / 100);
       this.updateValueDisplay(e.target as HTMLInputElement);
-      await this.beautyPixel.processImageAsync();
+      this.beautyPixel.refresh();
     });
 
     const eyeSlider = document.querySelector<HTMLInputElement>('#eye');
@@ -90,13 +90,25 @@ class App {
       const value = (e.target as HTMLInputElement).value;
       this.beautyPixel.setEye(parseInt(value) / 100);
       this.updateValueDisplay(e.target as HTMLInputElement);
-      await this.beautyPixel.processImageAsync();
+      this.beautyPixel.refresh();
     });
 
     const saveButton = document.querySelector<HTMLButtonElement>('#save');
     saveButton?.addEventListener('click', async (e) => {
-      await this.beautyPixel.processImageAsync('output.png');
+      this.beautyPixel.save('output.png');
     });
+
+    let lastRenderTime = 0;
+
+    // Limit to 1 fps in case of too much GPU utilization in mobile browser
+    const render = () => {
+      const now = Date.now();
+      if (now - lastRenderTime >= 1000) {
+        this.beautyPixel.render();
+        lastRenderTime = now;
+      }
+      requestAnimationFrame(render);
+    };
 
     setTimeout(async() => {
 
@@ -131,10 +143,9 @@ class App {
 
       // Set face-api 68 point landmarks
       this.beautyPixel.setFacePoints(normalizedFacePoints);
+      this.beautyPixel.refresh();
 
-      // Process test image
-      await this.beautyPixel.processImageAsync();
-
+      requestAnimationFrame(render);
     }, 100);
   }
 }
